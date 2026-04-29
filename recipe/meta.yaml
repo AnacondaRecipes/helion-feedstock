@@ -1,0 +1,70 @@
+{% set name = "helion" %}
+{% set version = "1.0.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: a7e58a18b461dabb486fb8ba0c6f91fc95f7582cc42883143dcabfdca94200b6
+
+build:
+  number: 0
+  script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
+  # Helion requires Python >=3.10 (upstream pyproject.toml).
+  skip: true  # [py<310]
+  # Helion is a Triton frontend; Triton is only built on Linux, so the package
+  # is functional only on Linux. The triton run-dep restricts install platforms.
+  skip: true  # [not linux]
+
+requirements:
+  host:
+    - python
+    - pip
+    - hatchling
+    - hatch-vcs
+  run:
+    - python
+    - typing_extensions >=4.0.0
+    - filecheck
+    - psutil
+    - rich
+    - numpy
+    - scikit-learn >=1.3.0
+    # PyTorch and Triton are required at runtime per upstream README, but are
+    # not declared in pyproject.toml because users typically install matching
+    # versions outside the package manager. We pin to the minimums documented
+    # at https://github.com/pytorch/helion#requirements.
+    - pytorch >=2.9
+    - triton >=3.5
+
+test:
+  imports:
+    - helion
+    - helion.language
+    - helion.runtime
+  commands:
+    - pip check
+  requires:
+    - pip
+
+about:
+  home: https://github.com/pytorch/helion
+  license: BSD-3-Clause
+  license_family: BSD
+  license_file: LICENSE
+  summary: A Python-embedded DSL that makes it easy to write ML kernels
+  description: |
+    Helion is a Python-embedded domain-specific language (DSL) for authoring
+    machine learning kernels, designed to compile down to Triton, a performant
+    backend for programming GPUs and other devices. Helion aims to raise the
+    level of abstraction compared to Triton, making it easier to write correct
+    and efficient kernels while enabling more automation in the autotuning
+    process.
+  doc_url: https://helionlang.com
+  dev_url: https://github.com/pytorch/helion
+
+extra:
+  recipe-maintainers:
+    - xkong-anaconda
