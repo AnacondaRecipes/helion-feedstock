@@ -12,11 +12,9 @@ source:
 build:
   number: 0
   script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
-  # Helion requires Python >=3.10 (upstream pyproject.toml).
-  skip: true  # [py<310]
-  # Helion is a Triton frontend; Triton is only built on Linux, so the package
-  # is functional only on Linux. The triton run-dep restricts install platforms.
-  skip: true  # [not linux]
+  # py<310: upstream requires-python (pyproject.toml).
+  # not linux: Helion is a Triton frontend; Triton is Linux-only on pkgs/main.
+  skip: true  # [py<310 or not linux]
 
 requirements:
   host:
@@ -32,6 +30,9 @@ requirements:
     - rich
     - numpy
     - scikit-learn >=1.3.0
+    # packaging is imported by helion/_compat.py but missing from upstream
+    # pyproject.toml (https://github.com/pytorch/helion/blob/v1.0.0/pyproject.toml).
+    - packaging
     # PyTorch and Triton are required at runtime per upstream README, but are
     # not declared in pyproject.toml because users typically install matching
     # versions outside the package manager. We pin to the minimums documented
@@ -44,10 +45,12 @@ test:
     - helion
     - helion.language
     - helion.runtime
-  commands:
-    - pip check
   requires:
     - pip
+    # Force CUDA pytorch build for the GPU smoke test in run_test.py.
+    - pytorch=*=*cuda*
+  commands:
+    - pip check
 
 about:
   home: https://github.com/pytorch/helion
