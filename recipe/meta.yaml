@@ -13,9 +13,12 @@ build:
   number: 0
   script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
   # py<310: upstream requires-python (pyproject.toml).
+  # py>313: pytorch 2.10 has no py3.14 build; solver falls back to pytorch
+  # 2.9.1, which fails to import on Python 3.14 (typing.Union AttributeError
+  # in torch.ao.quantization). Re-enable when pytorch ships py3.14 wheels.
   # Triton (a hard run dep) is built only on linux-64 on pkgs/main, so helion
-  # is unusable elsewhere. Match triton's skip exactly.
-  skip: true  # [py<310 or not (linux and x86_64)]
+  # is unusable elsewhere. Match triton's skip.
+  skip: true  # [py<310 or py>313 or not (linux and x86_64)]
 
 requirements:
   host:
